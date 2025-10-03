@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Placement Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --sidebar-width: 256px;
+        }
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px) scale(0.98); } 
+            to { opacity: 1; transform: translateY(0) scale(1); } 
+        }
+        
+        /* Horizontal Rocket Animation */
+        @keyframes launch-horizontal {
+            0% { transform: translateX(-100vw) scale(0.8); opacity: 0.5; }
+            100% { transform: translateX(100vw) scale(1.2); opacity: 1; }
+        }
+        .rocket-launch-horizontal { animation: launch-horizontal 3s ease-in-out forwards; }
+
+        /* Toast Notification */
+        @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; } }
+        .toast {
+            animation: slideInUp 0.5s ease-out, fadeOut 0.5s ease-in 2.5s forwards;
+        }
+
+        /* Hamburger Menu Animation */
+        .hamburger {
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            transition: all 0.25s;
+            position: relative;
+        }
+        .hamburger-top,
+        .hamburger-middle,
+        .hamburger-bottom {
+            position: absolute;
+            width: 24px;
+            height: 2px;
+            top: 0;
+            left: 0;
+            background: #4a5568; /* text-gray-700 */
+            transform: rotate(0);
+            transition: all 0.5s;
+        }
+        .hamburger-middle {
+            transform: translateY(7px);
+        }
+        .hamburger-bottom {
+            transform: translateY(14px);
+        }
+        .hamburger.open .hamburger-top {
+            transform: rotate(45deg) translateY(6px) translateX(6px);
+        }
+        .hamburger.open .hamburger-middle {
+            display: none;
+        }
+        .hamburger.open .hamburger-bottom {
+            transform: rotate(-45deg) translateY(6px) translateX(-6px);
+        }
+        
+        /* Shining Badge Animation */
+        @keyframes shine {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        .shining-badge {
+            background: linear-gradient(to right, #10B981, #34D399, #A7F3D0, #34D399, #10B981);
+            background-size: 200% auto;
+            color: white;
+            animation: shine 2.5s linear infinite;
+        }
+
+        /* Video Call UI */
+        .video-feed {
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        .call-controls button {
+            background-color: rgba(255,255,255,0.2);
+            backdrop-filter: blur(5px);
+        }
+         .call-controls button.hang-up {
+            background-color: #ef4444; /* red-500 */
+        }
+        
+        /* Responsive Table to Card CSS */
+        @media (max-width: 768px) {
+            .responsive-table thead {
+                display: none;
+            }
+            .responsive-table tr {
+                display: block;
+                border: 1px solid #e5e7eb;
+                border-radius: 0.75rem;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            }
+             .responsive-table tr:last-child {
+                margin-bottom: 0;
+            }
+            .responsive-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.5rem 0;
+                border: none;
+            }
+             .responsive-table td:first-child {
+                padding-top: 0;
+            }
+             .responsive-table td:last-child {
+                padding-bottom: 0;
+            }
+            .responsive-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                text-transform: capitalize;
+                color: #4b5563; /* text-gray-600 */
+            }
+        }
+        /* General smooth transition class */
+        .smooth-transition {
+            transition: all 0.3s ease-in-out;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+        .pie-chart-slice {
+            transition: transform 0.2s ease-in-out;
+        }
+        .pie-chart-slice:hover {
+            transform: scale(1.05);
+        }
+
+        /* Certificate Styles */
+        .certificate {
+            background: #f9fafb;
+            border: 10px solid #a5b4fc;
+            padding: 2rem;
+            font-family: 'Times New Roman', serif;
+        }
+        .certificate-header {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #312e81;
+            text-align: center;
+        }
+        .certificate-body {
+            font-size: 1.25rem;
+            color: #4b5563;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        .certificate-name {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #111827;
+            border-bottom: 2px solid #6366f1;
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-900">
+
+    <div id="app-container">
+        <!-- App content will be rendered here -->
+    </div>
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[100]"></div>
+
+    <script type="module">
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // --- MOCK DATA ---
+        
+        const generateStudents = () => {
+            const students = [];
+            const firstNames = ["Aarav", "Vivaan", "Aditya", "Vihaan", "Arjun", "Sai", "Reyansh", "Ayaan", "Krishna", "Ishaan", "Saanvi", "Aadhya", "Kiara", "Diya", "Pari", "Ananya", "Riya", "Sitara"];
+            const lastNames = ["Sharma", "Verma", "Gupta", "Singh", "Kumar", "Patel", "Reddy", "Mehta", "Jain", "Khan"];
+             const branches = ['Computer Science', 'Information Technology', 'Electronics', 'Mechanical'];
+
+            for (let i = 1; i <= 100; i++) {
+                const fname = firstNames[Math.floor(Math.random() * firstNames.length)];
+                const lname = lastNames[Math.floor(Math.random() * lastNames.length)];
+                 const isPlaced = Math.random() > 0.6;
+                students.push({
+                    id: i,
+                    name: `${fname} ${lname}`,
+                    email: `${fname.toLowerCase()}.${lname.toLowerCase()}@gec.ac.in`,
+                    branch: branches[Math.floor(Math.random() * branches.length)],
+                    status: isPlaced ? 'Placed' : 'Not Placed',
+                    aptitudeScore: Math.floor(Math.random() * 41) + 60, 
+                    cgpa: (Math.random() * (9.5 - 7.0) + 7.0).toFixed(2), 
+                    package: isPlaced ? (Math.random() * (15 - 5) + 5).toFixed(1) : null 
+                });
+            }
+            students.push({ id: 101, name: "Priya Sharma", email: "priya.sharma@gec.ac.in", branch: 'Computer Science', status: 'Not Placed', aptitudeScore: 99, cgpa: 9.2 });
+            students.push({ id: 102, name: "Rohan Mehra", email: "rohan.mehra@gec.ac.in", branch: 'Computer Science', status: 'Not Placed', aptitudeScore: 88, cgpa: 8.8 });
+            
+            return students;
+        };
+
+        const mockData = {
+            student: {
+                name: "Priya Sharma",
+                id: 101, 
+                profile: {
+                    name: "Priya Sharma",
+                    headline: "Aspiring Full-Stack Developer | Computer Science Student",
+                    profilePicUrl: "https://placehold.co/128x128/E0E7FF/4F46E5?text=PS",
+                    about: "I am a passionate computer science student with a strong foundation in web development, specializing in the MERN stack. I am eager to apply my skills to solve real-world challenges and contribute to a forward-thinking organization.",
+                    experience: [
+                        { 
+                            role: "Full-Stack Engineer", 
+                            company: "Tech Solutions", 
+                            period: "Internship Completed on September 30, 2025", 
+                            description: "Supervisor Rating: 5/5. Successfully completed the internship.",
+                            isInternship: true,
+                            certificateData: {
+                                certId: `CERT-2-1721848500000`,
+                                studentName: "Priya Sharma",
+                                company: "Tech Solutions",
+                                role: "Full-Stack Engineer",
+                                completionDate: "September 30, 2025",
+                                rating: 5,
+                            }
+                        },
+                        { role: "Web Development Intern", company: "Local Startup", period: "June 2024 - Aug 2024", description: "Developed features for a client-facing web application using React and Firebase." },
+                    ],
+                    education: [
+                        { degree: "B.Tech in Computer Science", college: "Government Engineering College, Bikaner", period: "2022 - 2026" },
+                    ],
+                    skills: ["React", "JavaScript", "Node.js", "Express", "PostgreSQL", "Tailwind CSS", "Git"],
+                    certificates: [
+                        { name: "Responsive Web Design", issuer: "freeCodeCamp", description: "Completed a 300-hour course on responsive web design." },
+                    ],
+                    resumeUrl: "#"
+                }
+            },
+            recruiter: { 
+                name: "Rajesh Kumar", 
+                company: "Innovate Inc.",
+                interviews: [
+                    { id: 1, studentId: 102, studentName: "Rohan Mehra", role: "Frontend Developer Intern", date: "2025-10-05T10:00:00", type: "Technical", status: "Scheduled" },
+                ],
+                companyProfile: {
+                    name: "Innovate Inc.",
+                    tagline: "Pioneering the future of technology.",
+                    about: "Innovate Inc. is a leading technology firm specializing in creating cutting-edge software solutions for businesses worldwide.",
+                    website: "www.innovate-inc.com",
+                }
+            },
+            college_admin: { 
+                name: "Dr. Anjali Mehta",
+                college: "Government Engineering College, Bikaner",
+                companies: [
+                    { id: 1, name: "Innovate Inc.", industry: "IT Services", jobsPosted: 5, lastActivity: "2025-09-20" },
+                    { id: 2, name: "DataDriven Co.", industry: "Analytics", jobsPosted: 2, lastActivity: "2025-09-18" },
+                     { id: 3, name: "UX Gurus", industry: "Design", jobsPosted: 1, lastActivity: "2025-09-15" },
+                      { id: 4, name: "Core Mechanics", industry: "Core Engineering", jobsPosted: 3, lastActivity: "2025-09-21" },
+                ],
+            },
+            faculty_mentor: {
+                name: "Dr. Ramesh Gupta",
+                department: "Computer Science",
+                approvalHistory: [
+                    { id: 3, studentName: "Rohan Mehra", company: "Tech Solutions", role: "Full-Stack Engineer", status: "Approved" },
+                ]
+            },
+            jobs: [
+                { id: 1, company: "Innovate Inc.", title: "Frontend Developer Intern", location: "Jaipur", stipend: "₹25,000/mo", skills: ["React", "JavaScript", "HTML", "CSS"], status: "Open", applicants: 12 },
+                { id: 2, company: "Tech Solutions", title: "Full-Stack Engineer", location: "Remote", stipend: "₹12 LPA", skills: ["Node.js", "Express", "React", "PostgreSQL"], status: "Open", applicants: 8 },
+                { id: 3, company: "DataDriven Co.", title: "Data Science Intern", location: "Kota", stipend: "₹30,000/mo", skills: ["Python", "Pandas", "SQL", "Machine Learning"], status: "Open", applicants: 25 },
+                { id: 4, company: "UX Gurus", title: "UI/UX Designer", location: "Remote", stipend: "₹20,000/mo", skills: ["Figma", "Adobe XD", "User Research"], status: "Pending Verification", applicants: 3 },
+            ],
+            allApplications: [
+                { id: 1, studentId: 101, studentName: "Priya Sharma", jobId: 1, company: "Innovate Inc.", role: "Frontend Developer Intern", status: "Pending Faculty/Mentor Approval", appliedOn: "2025-09-22" },
+                { id: 2, studentId: 101, studentName: "Priya Sharma", jobId: 2, company: "Tech Solutions", role: "Full-Stack Engineer", status: "Internship In Progress", appliedOn: "2025-09-18" },
+                { id: 3, studentId: 102, studentName: "Rohan Mehra", jobId: 1, company: "Innovate Inc.", role: "Frontend Developer Intern", status: "Pending Recruiter Review", appliedOn: "2025-09-21"},
+                { id: 4, studentId: 101, studentName: "Priya Sharma", jobId: 3, company: "DataDriven Co.", role: "Data Science Intern", status: "Rejected by Mentor", appliedOn: "2025-09-20", rejectionReason: "Lacks required coursework in advanced statistics." },
+            ],
+            parsedResume: {
+                name: "Priya Sharma",
+                headline: "AI Parsed: Software Engineering Student with Full-Stack Experience",
+                about: "AI Parsed: Results-oriented Computer Science student from GEC Bikaner, with hands-on experience in full-stack web development.",
+                experience: [{ role: "Software Development Intern", company: "Tech Innovators", period: "May 2025 - Aug 2025", description: "Worked on new features for a SaaS platform." }],
+                education: [{ degree: "B.Tech in Computer Science", college: "Government Engineering College, Bikaner", period: "2022 - 2026" }],
+                skills: ["React", "JavaScript", "Node.js", "MongoDB", "MERN Stack", "Agile", "TypeScript"],
+            },
+            aptitudeQuestions: [
+                { question: "Which number should come next in the series: 1, 4, 9, 16, __?", options: ["20", "25", "30", "36"], answer: "25" },
+                { question: "If A is the brother of B, and C is the sister of A, what is the relation of C to B?", options: ["Sister", "Brother", "Mother", "Aunt"], answer: "Sister" },
+                { question: "What is 20% of 200?", options: ["20", "40", "60", "80"], answer: "40" }
+            ]
+        };
+
+        let state = {
+            isAuthenticated: false,
+            currentRole: 'student',
+            activeView: 'Dashboard',
+            isSidebarOpen: window.innerWidth > 1024,
+            studentData: mockData.student,
+            facultyMentorData: mockData.faculty_mentor,
+            recruiterData: { ...mockData.recruiter, jobs: mockData.jobs.filter(j => j.company === mockData.recruiter.company) },
+            allStudents: generateStudents(),
+            allJobs: mockData.jobs,
+            allApplications: mockData.allApplications,
+            takingAptitudeTest: false,
+            aptitudeTestState: null,
+            viewingSupervisorForm: false,
+            currentAppForFeedback: null,
+            notifications: [],
+            showNotifications: false,
+        };
+        
+        let sortedStudents = [...state.allStudents].sort((a, b) => b.aptitudeScore - a.aptitudeScore);
+        let topStudentIds = sortedStudents.slice(0, 10).map(s => s.id);
+
+        // --- UTILITY & HELPER FUNCTIONS ---
+        const getStudentProfile = (studentId) => {
+            if (studentId === state.studentData.id) {
+                return state.studentData.profile;
+            }
+            const student = state.allStudents.find(s => s.id === studentId);
+            if (!student) return null;
+            // For demo purposes, generate a plausible profile.
+            return {
+                id: student.id,
+                name: student.name,
+                headline: `Aspiring Engineer | ${student.branch}`,
+                profilePicUrl: `https://placehold.co/128x128/E0E7FF/4F46E5?text=${student.name.split(' ').map(n => n[0]).join('')}`,
+                about: `${student.name} is a passionate ${student.branch} student with a strong foundation in core engineering principles. Eager to apply academic knowledge to solve real-world challenges.`,
+                experience: [ { role: "Intern", company: "Local Tech Firm", period: "Summer 2024", description: "Assisted senior engineers with project tasks." } ],
+                education: [ { degree: `B.Tech in ${student.branch}`, college: "Government Engineering College, Bikaner", period: "2022 - 2026" } ],
+                skills: student.branch.includes('Computer') ? ["Java", "Python", "SQL", "Data Structures", "C++"] : ["AutoCAD", "MATLAB", "Circuit Design", "Thermodynamics"],
+                cgpa: student.cgpa,
+                resumeUrl: "#" // Placeholder for resume PDF
+            };
+        };
+
+        const getStatusChip = (status) => {
+            const styles = {
+                "Pending Faculty/Mentor Approval": "bg-orange-100 text-orange-800 border-orange-300",
+                "Pending Recruiter Review": "bg-yellow-100 text-yellow-800 border-yellow-300",
+                "Pending Verification": "bg-yellow-100 text-yellow-800 border-yellow-300",
+                "Rejected by Mentor": "bg-red-100 text-red-800 border-red-300",
+                "Rejected by Recruiter": "bg-red-100 text-red-800 border-red-300",
+                "Shortlisted": "bg-blue-100 text-blue-800 border-blue-300",
+                "Internship In Progress": "bg-purple-100 text-purple-800 border-purple-300",
+                "Internship Completed": "bg-green-100 text-green-800 border-green-300",
+                "Placed": "bg-green-100 text-green-800 border-green-300",
+                "Not Placed": "bg-gray-100 text-gray-800 border-gray-300",
+                "Open": "bg-green-100 text-green-800",
+                "Scheduled": "bg-cyan-100 text-cyan-800",
+            };
+            return `<span class="px-3 py-1 text-xs sm:text-sm font-medium rounded-full border whitespace-nowrap ${styles[status] || 'bg-gray-100 text-gray-800'}">${status}</span>`;
+        };
+
+        const downloadCSV = (data, filename) => {
+            if (!data || data.length === 0) {
+                alert('No data to download.');
+                return;
+            }
+            const headers = Object.keys(data[0]);
+            const csvRows = [
+                headers.join(','),
+                ...data.map(row => 
+                    headers.map(header => JSON.stringify(row[header], (key, value) => value === null ? '' : value)).join(',')
+                )
+            ];
+            const csvString = csvRows.join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `${filename}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+
+        const showToast = (message, type = 'success') => {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const icon = type === 'success' ? `<i data-lucide="check-circle" class="text-green-500"></i>` : `<i data-lucide="alert-circle" class="text-red-500"></i>`;
+            toast.className = `toast bg-white shadow-lg rounded-lg flex items-center p-4 border-l-4 ${type === 'success' ? 'border-green-500' : 'border-red-500'}`;
+            toast.innerHTML = `${icon}<span class="ml-3 font-semibold text-gray-700">${message}</span>`;
+            toastContainer.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => toast.remove(), 3000);
+        };
+        
+        // --- GEMINI API INTEGRATION ---
+        async function getAiSkillAnalysis(studentSkills, jobSkills) {
+            const apiKey = "AIzaSyDVykGCS1XChj7X2t4kVHWZ5k1DfmJ_pnY";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const systemPrompt = "You are a helpful career coach for a college student. Analyze the student's skills against the required skills for a job. Provide a concise summary and categorize the skills accurately.";
+            const userQuery = `Student Skills: ${JSON.stringify(studentSkills)}\nJob Skills: ${JSON.stringify(jobSkills)}\nAnalyze the skills and provide the matching skills, skills to develop, and a brief, encouraging summary.`;
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "matchingSkills": { "type": "ARRAY", "items": { "type": "STRING" } },
+                            "skillsToDevelop": { "type": "ARRAY", "items": { "type": "STRING" } },
+                            "summary": { "type": "STRING" }
+                        }
+                    }
+                }
+            };
+            try {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) { console.error("API Error Response:", await response.text()); return null; }
+                const result = await response.json();
+                return JSON.parse(result.candidates?.[0]?.content?.parts?.[0]?.text);
+            } catch (error) { console.error("Error calling Gemini API:", error); return null; }
+        }
+
+        async function getAiProfileFromResume(base64Data, mimeType) {
+            const apiKey = "AIzaSyDVykGCS1XChj7X2t4kVHWZ5k1DfmJ_pnY";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const prompt = "You are an expert resume parser. Extract the key professional information from the provided resume file and return it as a structured JSON object. The experience and education should be arrays of objects. Focus on details like role, company, dates, degree, and college.";
+
+            const payload = {
+                contents: [{
+                    parts: [
+                        { text: prompt },
+                        { inlineData: { mimeType: mimeType, data: base64Data } }
+                    ]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "name": { "type": "STRING" },
+                            "headline": { "type": "STRING" },
+                            "about": { "type": "STRING" },
+                            "experience": { 
+                                "type": "ARRAY", 
+                                "items": { 
+                                    "type": "OBJECT",
+                                    "properties": { "role": { "type": "STRING" }, "company": { "type": "STRING" }, "period": { "type": "STRING" }, "description": { "type": "STRING" } }
+                                } 
+                            },
+                             "education": { 
+                                "type": "ARRAY", 
+                                "items": { 
+                                    "type": "OBJECT",
+                                    "properties": { "degree": { "type": "STRING" }, "college": { "type": "STRING" }, "period": { "type": "STRING" } }
+                                } 
+                            },
+                            "skills": { "type": "ARRAY", "items": { "type": "STRING" } }
+                        }
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    console.error("API Error Response:", await response.text());
+                    return null;
+                }
+                const result = await response.json();
+                const parsedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (parsedText) {
+                    return JSON.parse(parsedText);
+                }
+                console.error("Could not find parsed text in Gemini response:", result);
+                return null;
+            } catch (error) {
+                console.error("Error calling or parsing Gemini API response:", error);
+                return null;
+            }
+        }
+
+        // --- TEMPLATING / RENDERING FUNCTIONS ---
+        
+        const CertificateTemplate = (certData) => {
+            if (!certData) return '';
+            const ratingStars = '&#9733;'.repeat(certData.rating) + '&#9734;'.repeat(5 - certData.rating);
+            return `<div class="certificate relative">
+                <div class="absolute top-4 right-4 flex items-center gap-x-2 text-green-600 font-semibold opacity-80">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i> Verified
+                </div>
+                <div class="certificate-header">Certificate of Completion</div>
+                <div class="certificate-body">
+                    This is to certify that
+                    <div class="certificate-name">${certData.studentName}</div>
+                    has successfully completed the internship for the role of
+                    <strong class="text-indigo-700">${certData.role}</strong> at <strong class="text-indigo-700">${certData.company}</strong>.
+                    <br/><br/>
+                    Completion Date: ${certData.completionDate}
+                    <br/>
+                    Supervisor Rating: <span class="text-yellow-400 text-2xl">${ratingStars}</span>
+                </div>
+                <p class="text-xs text-center text-gray-400 mt-8">Certificate ID: ${certData.certId}</p>
+            </div>`;
+        };
+
+        const CertificateModal = (certData) => {
+            return `<div id="certificate-modal-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+                <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl relative">
+                    <button id="close-cert-modal" class="absolute -top-4 -right-4 bg-white rounded-full p-1.5 shadow-lg hover:bg-gray-200 z-10"><i data-lucide="x" class="text-gray-700"></i></button>
+                    <div id="certificate-content-wrapper">
+                        ${CertificateTemplate(certData)}
+                    </div>
+                     <div class="p-4 bg-gray-50 rounded-b-lg text-right border-t">
+                        <button id="download-cert-from-modal" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-x-2 float-right"><i data-lucide="download" class="w-4 h-4"></i>Download</button>
+                    </div>
+                </div>
+            </div>`;
+        };
+        
+        const AppShell = (content) => `
+            <div class="relative min-h-screen lg:flex">
+                ${Sidebar()}
+                <div id="main-content" class="flex-1 flex flex-col overflow-hidden smooth-transition ${state.isSidebarOpen ? 'lg:ml-64' : ''}">
+                    ${Header()}
+                    <main class="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto">${content}</main>
+                </div>
+                <div id="mobile-overlay" class="fixed inset-0 bg-black/30 z-30 lg:hidden ${state.isSidebarOpen ? '' : 'hidden'}"></div>
+            </div>
+        `;
+        
+        const Sidebar = () => {
+            const navItems = {
+                student: [ { icon: 'layout-dashboard', label: 'Dashboard' }, { icon: 'briefcase', label: 'Find Jobs' }, { icon: 'file-text', label: 'Applications' }, { icon: 'user', label: 'My Profile' }, { icon: 'award', label: 'Aptitude Tests' } ],
+                faculty_mentor: [ { icon: 'layout-dashboard', label: 'Dashboard' } ],
+                recruiter: [ { icon: 'layout-dashboard', label: 'Dashboard' }, { icon: 'briefcase', label: 'Manage Jobs' }, { icon: 'users', label: 'Applicants' }, { icon: 'calendar', label: 'Interviews' }, { icon: 'building', label: 'Company Profile' } ],
+                college_admin: [ { icon: 'layout-dashboard', label: 'Dashboard' }, { icon: 'users', label: 'Students' }, { icon: 'building', label: 'Companies' }, { icon: 'briefcase', label: 'Job Verification'}, { icon: 'file-text', label: 'Reports' } ],
+            };
+            const items = navItems[state.currentRole];
+            return `<aside class="fixed inset-y-0 left-0 bg-white border-r border-gray-200 w-64 p-4 flex flex-col transform smooth-transition z-40 ${state.isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}">
+                <div class="text-2xl font-bold text-indigo-600 mb-8 px-2">Placement Portal</div>
+                <nav class="flex-1 space-y-2">${items.map(item => `<button data-view="${item.label}" class="nav-button w-full flex items-center px-4 py-2.5 font-medium rounded-lg smooth-transition text-left ${state.activeView === item.label ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-100 hover:translate-x-1'}"><i data-lucide="${item.icon}"></i><span class="ml-4">${item.label}</span></button>`).join('')}</nav>
+                <div class="mt-auto"><button id="logout-button" class="w-full flex items-center px-4 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 smooth-transition"><i data-lucide="log-out"></i><span class="ml-4">Logout</span></button></div>
+                <div class="mt-4 p-2 border-t"><label for="role-switcher" class="block text-xs font-medium text-gray-500 mb-2">Demo Role Switcher</label><select id="role-switcher" class="w-full p-2 border rounded-md text-sm"><option value="student" ${state.currentRole === 'student' ? 'selected' : ''}>Student</option><option value="faculty_mentor" ${state.currentRole === 'faculty_mentor' ? 'selected' : ''}>Faculty/Mentor</option><option value="recruiter" ${state.currentRole === 'recruiter' ? 'selected' : ''}>Recruiter</option><option value="college_admin" ${state.currentRole === 'college_admin' ? 'selected' : ''}>College Admin</option></select></div>
+            </aside>`;
+        };
+        
+        const Header = () => {
+            const roleData = {
+                student: { name: mockData.student.name, detail: "Student" },
+                faculty_mentor: { name: mockData.faculty_mentor.name, detail: "Faculty/Mentor, " + mockData.faculty_mentor.department },
+                recruiter: { name: mockData.recruiter.name, detail: mockData.recruiter.company },
+                college_admin: { name: mockData.college_admin.name, detail: "College Admin" },
+            };
+            const currentData = roleData[state.currentRole];
+            const unreadCount = state.notifications.filter(n => !n.read).length;
+
+            return `<header class="bg-white/80 backdrop-blur-lg sticky top-0 z-20 p-4 sm:p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                     <button id="menu-button" class="hamburger ${state.isSidebarOpen ? 'open' : ''}"><div class="hamburger-top"></div><div class="hamburger-middle"></div><div class="hamburger-bottom"></div></button>
+                    <h1 class="text-xl font-semibold text-gray-800 ml-4 sm:ml-0">${state.activeView}</h1>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <button id="notification-bell" class="relative text-gray-600 hover:text-indigo-600 smooth-transition">
+                                <i data-lucide="bell"></i>
+                                ${unreadCount > 0 ? `<span class="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">${unreadCount}</span>` : ''}
+                            </button>
+                            <div id="notification-panel" class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border p-4 z-50 ${state.showNotifications ? 'animate-fade-in' : 'hidden'}">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h3 class="font-semibold">Notifications</h3>
+                                    <button id="mark-all-read" class="text-xs text-indigo-600 hover:underline">Mark all as read</button>
+                                </div>
+                                <div class="max-h-96 overflow-y-auto divide-y">
+                                    ${state.notifications.length > 0 ? state.notifications.map(n => `
+                                        <div class="p-2 ${n.read ? 'opacity-60' : 'font-semibold'}">
+                                            <p class="text-sm">${n.text}</p>
+                                            <p class="text-xs text-gray-400 mt-1">${new Date(n.timestamp).toLocaleString()}</p>
+                                        </div>
+                                    `).join('') : '<p class="text-sm text-gray-500 text-center py-4">No new notifications.</p>'}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-lg">${currentData.name.charAt(0)}</div>
+                        <div class="hidden md:block"><p class="font-semibold text-gray-800 text-sm">${currentData.name}</p><p class="text-xs text-gray-500">${currentData.detail}</p></div>
+                    </div>
+                </div>
+            </header>`;
+        };
+
+        const LoginPage = () => `<div class="w-full flex items-center justify-center min-h-screen p-4">
+                <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-lg border animate-fade-in">
+                    <div class="text-center"><h1 class="text-3xl font-bold text-indigo-600">Placement Portal</h1><p class="mt-2 text-gray-500">Sign in to access your dashboard</p></div>
+                    <form id="login-form" class="space-y-6">
+                        <div><label class="text-sm font-medium text-gray-700">I am a...</label><select id="login-role-select" class="w-full p-3 mt-1 border rounded-lg"><option value="student">Student</option><option value="faculty_mentor">Faculty/Mentor</option><option value="recruiter">Recruiter</option><option value="college_admin">College Admin</option></select></div>
+                        <div><button type="submit" class="w-full py-3 font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 smooth-transition">Login</button></div>
+                    </form>
+                </div>
+            </div>`;
+        
+        const StudentDashboard = () => {
+             const studentApplications = state.allApplications.filter(app => app.studentId === state.studentData.id);
+             return `<div class="space-y-8 animate-fade-in"><div class="bg-white p-6 rounded-2xl shadow-sm border">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">My Recent Applications</h2>
+                    <div class="overflow-x-auto"><table class="w-full text-left">
+                        <thead><tr class="text-sm text-gray-500 border-b"><th class="py-3 px-4 font-medium">Company</th><th class="py-3 px-4 font-medium">Role</th><th class="py-3 px-4 font-medium text-center">Status</th></tr></thead>
+                        <tbody>${studentApplications.map(app => `<tr class="border-b last:border-0 hover:bg-gray-50"><td class="py-4 px-4 font-semibold text-gray-700">${app.company}</td><td class="py-4 px-4 text-gray-600">${app.role}</td><td class="py-4 px-4 text-center">${getStatusChip(app.status)}</td></tr>`).join('')}</tbody>
+                    </table></div></div></div>`;
+        }
+
+        const StudentApplications = () => {
+            const studentApplications = state.allApplications.filter(app => app.studentId === state.studentData.id);
+            return `<div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border animate-fade-in">
+                <div class="md:hidden">
+                    ${studentApplications.map(app => `
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4 border">
+                        <div class="flex justify-between items-start mb-2">
+                             <div>
+                                <p class="font-bold text-gray-800">${app.role}</p>
+                                <p class="text-sm text-indigo-600 font-semibold">${app.company}</p>
+                            </div>
+                            ${getStatusChip(app.status)}
+                        </div>
+                        <div class="text-sm text-gray-500 border-t pt-2 mt-2">Applied on ${app.appliedOn}</div>
+                        ${(app.status === 'Rejected by Mentor' || app.status === 'Rejected by Recruiter') && app.rejectionReason ? `<div class="text-sm text-red-600 bg-red-50 p-2 rounded-md mt-2"><b>Reason:</b> ${app.rejectionReason}</div>` : ''}
+                    </div>`).join('')}
+                </div>
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead><tr class="text-sm text-gray-500 border-b"><th class="py-3 px-4 font-medium">Company</th><th class="py-3 px-4 font-medium">Role</th><th class="py-3 px-4 font-medium">Applied On</th><th class="py-3 px-4 font-medium text-center">Status</th></tr></thead>
+                        <tbody>${studentApplications.map(app => `<tr class="border-b last:border-0 hover:bg-gray-50">
+                            <td class="py-4 px-4 font-semibold">${app.company}</td>
+                            <td class="py-4 px-4">${app.role}</td>
+                            <td class="py-4 px-4">${app.appliedOn}</td>
+                            <td class="py-4 px-4 text-center">
+                                <div class="flex items-center justify-center gap-x-2">
+                                    ${getStatusChip(app.status)}
+                                    ${(app.status === 'Rejected by Mentor' || app.status === 'Rejected by Recruiter') && app.rejectionReason ? `<span title="Reason: ${app.rejectionReason}"><i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-pointer"></i></span>` : ''}
+                                </div>
+                            </td></tr>`).join('')}</tbody>
+                    </table>
+                </div>
+            </div>`;
+        }
+
+        const AptitudeTests = () => {
+            if(state.takingAptitudeTest) return AptitudeTestView();
+            const currentUserRank = sortedStudents.findIndex(s => s.id === state.studentData.id);
+            return `<div class="relative h-full"><div class="space-y-8 animate-fade-in">
+                    <div class="flex"><button id="start-test-btn" class="bg-indigo-600 text-white font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:bg-indigo-700 w-full sm:w-auto smooth-transition">Start New Test</button></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border"><div class="overflow-y-auto" style="max-height: calc(100vh - 300px);"><table class="w-full text-left">
+                        <thead><tr class="text-sm text-gray-500 border-b sticky top-0 bg-white"><th class="py-3 px-4 font-medium">Rank</th><th class="py-3 px-4 font-medium">Name</th><th class="py-3 px-4 font-medium">Branch</th><th class="py-3 px-4 font-medium text-right">Score</th></tr></thead>
+                        <tbody>${sortedStudents.map((student, index) => `<tr class="border-b last:border-0 ${index < 10 ? 'bg-green-50' : ''} hover:bg-gray-50"><td class="py-4 px-4 font-bold text-gray-700">${index + 1} ${index < 10 ? '<i data-lucide="trophy" class="inline-block w-4 h-4 text-yellow-500 ml-1"></i>' : ''}</td><td class="py-4 px-4 font-semibold">${student.name}</td><td class="py-4 px-4 text-gray-600">${student.branch}</td><td class="py-4 px-4 text-right font-bold text-indigo-600">${student.aptitudeScore}</td></tr>`).join('')}</tbody>
+                    </table></div></div></div>
+                ${currentUserRank !== -1 ? `<div class="sticky bottom-0 bg-white/80 backdrop-blur-md p-4 rounded-t-lg shadow-lg border-t animate-fade-in"><div class="flex items-center justify-between"><div class="flex items-center gap-x-4"><span class="font-bold text-xl text-gray-700">#${currentUserRank + 1}</span><div><p class="font-bold text-gray-800">Your Rank</p><p class="text-sm text-gray-500">${state.studentData.name}</p></div></div><div class="text-right"><p class="font-bold text-2xl text-indigo-600">${sortedStudents[currentUserRank].aptitudeScore}</p><p class="text-sm text-gray-500">Your Score</p></div></div></div>` : ''}
+            </div>`;
+        };
+
+        const AptitudeTestView = () => {
+            const currentQIndex = state.aptitudeTestState?.currentQuestion || 0;
+            const question = mockData.aptitudeQuestions[currentQIndex];
+            const userAnswers = state.aptitudeTestState?.answers || {};
+            return `<div class="bg-white p-8 rounded-2xl shadow-sm border max-w-3xl mx-auto animate-fade-in">
+                     <h2 class="text-xl font-semibold mb-2">Question ${currentQIndex + 1} of ${mockData.aptitudeQuestions.length}</h2><p class="text-lg text-gray-800 mb-6">${question.question}</p>
+                     <div class="space-y-4">${question.options.map((option, index) => `<div><input type="radio" id="option${index}" name="aptitude-option" value="${option}" class="aptitude-option-input hidden peer" ${userAnswers[currentQIndex] === option ? 'checked' : ''}><label for="option${index}" class="block p-4 border rounded-lg cursor-pointer peer-checked:bg-indigo-50 peer-checked:border-indigo-500 hover:bg-gray-50 smooth-transition">${option}</label></div>`).join('')}</div>
+                     <div class="flex justify-between mt-8"><button id="prev-question-btn" class="px-6 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 font-semibold smooth-transition" ${currentQIndex === 0 ? 'disabled' : ''}>Previous</button>${currentQIndex === mockData.aptitudeQuestions.length - 1 ? `<button id="submit-test-btn" class="px-6 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 font-semibold smooth-transition">Submit Test</button>` : `<button id="next-question-btn" class="px-6 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 font-semibold smooth-transition">Next</button>`}</div>
+                 </div>`;
+        };
+
+        const StudentProfile = () => {
+            const profile = state.studentData.profile;
+            const isTopStudent = topStudentIds.includes(state.studentData.id);
+            return `<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border"><div class="flex flex-col sm:flex-row items-start justify-between"><div class="flex items-center space-x-6"><img src="${profile.profilePicUrl}" alt="${profile.name}" class="w-24 h-24 rounded-full border-4 border-white shadow-md"/><div><div class="flex items-center gap-x-3"><h1 class="text-2xl font-bold text-gray-800">${profile.name}</h1>${isTopStudent ? `<span class="shining-badge flex items-center gap-x-1.5 text-sm font-semibold px-3 py-1 rounded-full"><i data-lucide="star" class="w-4 h-4"></i> Recommended</span>` : ''}</div><p class="text-gray-600">${profile.headline}</p><p class="text-sm text-gray-400 mt-1">Bikaner, Rajasthan, India</p></div></div><button id="edit-profile-btn" class="flex items-center space-x-2 border border-gray-300 text-gray-700 font-semibold px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm mt-4 sm:mt-0"><i data-lucide="edit" class="w-4 h-4"></i><span>Edit Profile</span></button></div></div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border"><h2 class="text-xl font-semibold text-gray-800 mb-2">About</h2><p class="text-gray-600 whitespace-pre-wrap">${profile.about}</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border"><h2 class="text-xl font-semibold text-gray-800 mb-4">Experience</h2><ul class="space-y-4">
+                        ${profile.experience.map((exp, index) => `<li class="border-l-2 border-indigo-200 pl-4">
+                            <p class="font-bold text-gray-700">${exp.role}</p>
+                            <p class="text-sm font-medium text-gray-600">${exp.company}</p>
+                            <p class="text-xs text-gray-400">${exp.period}</p>
+                            <p class="text-sm text-gray-500 mt-1">${exp.description || ''}</p>
+                            ${exp.isInternship ? `
+                            <div class="mt-2 flex items-center space-x-2">
+                                <button data-exp-index="${index}" class="view-certificate-btn text-xs inline-flex items-center gap-x-1 font-semibold text-indigo-600 hover:underline"><i data-lucide="award" class="w-3 h-3"></i> View Certificate</button>
+                                <button data-exp-index="${index}" class="download-certificate-btn text-xs inline-flex items-center gap-x-1 font-semibold text-gray-500 hover:underline"><i data-lucide="download" class="w-3 h-3"></i> Download</button>
+                            </div>` : ''}
+                        </li>`).join('')}
+                    </ul></div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-semibold text-gray-800">Licenses & Certifications</h2><button id="add-certificate-btn" class="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full"><i data-lucide="plus"></i></button></div><ul class="space-y-4">${profile.certificates.map(cert => `<li class="border-l-2 border-indigo-200 pl-4"><p class="font-bold text-gray-700">${cert.name}</p><p class="text-sm font-medium text-gray-600">${cert.issuer}</p><p class="text-sm text-gray-500 mt-1">${cert.description}</p></li>`).join('')}</ul></div>
+                </div>
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border"><h2 class="text-xl font-semibold text-gray-800 mb-4">Skills</h2><div class="flex flex-wrap gap-2">${profile.skills.map(skill => `<span class="bg-gray-200 text-gray-800 text-sm font-medium px-3 py-1 rounded-full">${skill}</span>`).join('')}</div></div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border"><h2 class="text-xl font-semibold text-gray-800 mb-4">Education</h2>${profile.education.map(edu => `<div><p class="font-bold text-gray-700">${edu.college}</p><p class="text-sm text-gray-600">${edu.degree}</p><p class="text-xs text-gray-400">${edu.period}</p></div>`).join('')}</div>
+                </div></div>`;
+        };
+
+        const FindJobs = () => {
+            const studentSkills = state.studentData.profile.skills;
+            const allOpenJobs = state.allJobs.filter(j => j.status === 'Open');
+
+            const topMatches = allOpenJobs.filter(job => {
+                const matchingSkills = job.skills.filter(skill => studentSkills.includes(skill));
+                return matchingSkills.length >= 3;
+            });
+
+            const otherJobs = allOpenJobs.filter(job => !topMatches.find(topJob => topJob.id === job.id));
+
+            return `
+            <div class="space-y-8 animate-fade-in">
+                 <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                        <i data-lucide="brain-circuit" class="mr-2 text-indigo-600"></i>Top Matches for You
+                    </h2>
+                    ${topMatches.length > 0 ? `
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${topMatches.map(job => `
+                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200 flex flex-col smooth-transition card-hover">
+                            <h3 class="font-bold text-gray-800">${job.title}</h3>
+                            <p class="text-indigo-600 font-semibold text-sm mb-2">${job.company}</p>
+                            <div class="flex-grow"></div>
+                            <button data-job-id="${job.id}" class="job-details-btn w-full text-center mt-4 bg-white text-indigo-600 font-semibold py-2 rounded-lg border border-indigo-200 hover:bg-indigo-100 smooth-transition text-sm">View Details</button>
+                        </div>`).join('')}
+                    </div>` : `<p class="text-gray-500 text-center py-4">No top matches found based on your skills. Keep updating your profile!</p>`}
+                 </div>
+                 <h2 class="text-xl font-semibold text-gray-800 mt-8">All Other Opportunities</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${otherJobs.map(job => `
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border flex flex-col smooth-transition card-hover">
+                        <h3 class="font-bold text-lg">${job.title}</h3>
+                        <p class="text-indigo-600 font-semibold">${job.company}</p>
+                        <p class="text-sm text-gray-500 mt-2">${job.location} | ${job.stipend}</p>
+                         <div class="flex-grow"></div>
+                        <button data-job-id="${job.id}" class="job-details-btn w-full mt-4 bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 smooth-transition">View Details</button>
+                    </div>`).join('')}
+                 </div>
+            </div>`;
+        }
+        
+        const FacultyDashboard = () => {
+            const activeTab = state.facultyTab || 'pending';
+            const pendingApprovals = state.allApplications.filter(app => app.status === 'Pending Faculty/Mentor Approval');
+            
+            const pendingContent = `<tbody>${pendingApprovals.length > 0 ? pendingApprovals.map(app => `
+                <tr class="border-b last:border-0 hover:bg-gray-50">
+                    <td data-label="Student"><button class="text-indigo-600 hover:underline review-application-btn" data-app-id="${app.id}" data-student-id="${app.studentId}">${app.studentName}</button></td>
+                    <td data-label="Company">${app.company}</td>
+                    <td data-label="Role">${app.role}</td>
+                    <td data-label="Status">${getStatusChip(app.status)}</td>
+                </tr>`).join('') : '<tr><td colspan="4" class="text-center py-8 text-gray-500">No pending approvals.</td></tr>'}</tbody>`;
+
+            const historyContent = `<tbody>${state.facultyMentorData.approvalHistory.map(app => `<tr class="border-b last:border-0"><td class="py-4 px-4 font-semibold">${app.studentName}</td><td class="py-4 px-4">${app.company}</td><td class="py-4 px-4">${app.role}</td><td class="py-4 px-4 text-center">${getStatusChip(app.status)}</td></tr>`).join('')}</tbody>`;
+            
+            return `<div class="space-y-8 animate-fade-in"><div class="bg-white p-6 rounded-2xl shadow-sm border"><div class="border-b border-gray-200"><nav class="-mb-px flex space-x-8" aria-label="Tabs"><button data-tab="pending" class="faculty-tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'pending' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}">Pending Approvals</button><button data-tab="history" class="faculty-tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'history' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}">Approval History</button></nav></div><div class="overflow-x-auto mt-4"><table class="w-full text-left responsive-table"><thead><tr class="text-sm text-gray-500 border-b"><th class="py-3 px-4 font-medium">Student</th><th class="py-3 px-4 font-medium">Company</th><th class="py-3 px-4 font-medium">Role</th><th class="py-3 px-4 font-medium text-center">Status</th></tr></thead>${activeTab === 'pending' ? pendingContent : historyContent}</table></div></div></div>`;
+        };
+
+        const RecruiterDashboard = () => `
+            <div class="space-y-8 animate-fade-in"><div class="bg-white p-6 rounded-2xl shadow-sm border"><h2 class="text-xl font-semibold text-gray-800 mb-4">Active Job Postings</h2><div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="text-sm text-gray-500 border-b"><th class="py-3 px-4 font-medium">Job Title</th><th class="py-3 px-4 font-medium text-center">Applicants</th><th class="py-3 px-4 font-medium text-center">Status</th></tr></thead><tbody>${state.recruiterData.jobs.map(job => `<tr class="border-b last:border-0 hover:bg-gray-50"><td class="py-4 px-4 font-semibold">${job.title}</td><td class="py-4 px-4 text-center">${job.applicants}</td><td class="py-4 px-4 text-center">${getStatusChip(job.status)}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+        
+        const ManageJobs = () => `
+            <div class="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in"><div class="flex justify-between items-center mb-6"><button id="post-job-btn" class="flex items-center space-x-2 bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg"><i data-lucide="plus-circle"></i><span>Post Job</span></button></div><div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="text-sm text-gray-500 border-b"><th class="py-3 px-4 font-medium">Job Title</th><th class="py-3 px-4 font-medium text-center">Applicants</th><th class="py-3 px-4 font-medium text-center">Status</th></tr></thead><tbody>${state.recruiterData.jobs.map(job => `<tr class="border-b last:border-0 hover:bg-gray-50"><td class="py-4 px-4 font-semibold">${job.title}</td><td class="py-4 px-4 text-center">${job.applicants}</td><td class="py-4 px-4 text-center">${getStatusChip(job.status)}</td></tr>`).join('')}</tbody></table></div></div>`;
+        
+        const ApplicantsView = () => {
+            const companyApplications = state.allApplications.filter(app => app.company === state.recruiterData.company);
+            return `<div class="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in"><div class="overflow-x-auto"><table class="w-full text-left responsive-table">
+                        <thead><tr class="text-sm text-gray-500 border-b"><th class="py-3 px-4 font-medium">Name</th><th class="py-3 px-4 font-medium">Role</th><th class="py-3 px-4 font-medium text-center">Status</th><th class="py-3 px-4 font-medium text-center">Action</th></tr></thead>
+                        <tbody>${companyApplications.map(app => `<tr class="border-b last:border-0 hover:bg-gray-50">
+                            <td data-label="Name">
+                                ${app.status === 'Pending Recruiter Review' ? `<button class="text-indigo-600 hover:underline review-application-btn" data-app-id="${app.id}" data-student-id="${app.studentId}">${app.studentName}</button>` : app.studentName}
+                            </td>
+                            <td data-label="Role">${app.role}</td>
+                            <td data-label="Status">${getStatusChip(app.status)}</td>
+                            <td data-label="Action">
+                                ${app.status === 'Internship In Progress' ? `<button class="text-sm font-semibold text-white bg-indigo-600 px-3 py-1.5 rounded-md hover:bg-indigo-700 smooth-transition request-feedback-btn" data-app-id="${app.id}">Request Feedback</button>` : ''}
+                                ${app.status === 'Internship Completed' && app.supervisorFeedback ? `<button class="text-sm font-semibold text-gray-600 bg-gray-200 px-3 py-1.5 rounded-md view-feedback-btn" data-app-id="${app.id}">View Feedback</button>` : ''}
+                            </td>
+                        </tr>`).join('')}</tbody>
+                    </table></div></div>`;
+        }
+        
+        const InterviewsView = () => {
+             const interviews = state.recruiterData.interviews;
+            return `<div class="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800">Scheduled Interviews</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left responsive-table">
+                        <thead><tr class="text-sm text-gray-500 border-b"><th class="py-3 px-4 font-medium">Student</th><th class="py-3 px-4 font-medium">Role</th><th class="py-3 px-4 font-medium">Date & Time</th><th class="py-3 px-4 font-medium text-center">Action</th></tr></thead>
+                        <tbody>${interviews.map(i => `<tr class="border-b last:border-0 hover:bg-gray-50">
+                            <td data-label="Student">${i.studentName}</td>
+                            <td data-label="Role">${i.role}</td>
+                            <td data-label="Date & Time">${new Date(i.date).toLocaleString()}</td>
+                            <td data-label="Action" class="flex flex-wrap gap-2 justify-end">
+                                <button data-interview-id="${i.id}" class="add-to-calendar-btn bg-purple-500 text-white text-xs font-bold py-2 px-3 rounded-md hover:bg-purple-600 smooth-transition">Add to Calendar</button>
+                                <button data-interview-id="${i.id}" class="join-call-btn bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded-md hover:bg-blue-600 smooth-transition">Join Call</button>
+                                <button data-interview-id="${i.id}" class="update-interview-status-btn bg-gray-200 text-gray-700 text-xs font-bold py-2 px-3 rounded-md hover:bg-gray-300 smooth-transition">Update Status</button>
+                            </td>
+                        </tr>`).join('')}</tbody>
+                    </table>
+                </div>
+            </div>`;
+        }
+        
+        const CompanyProfile = () => {
+            const profile = state.recruiterData.companyProfile;
+            return `<div class="bg-white p-8 rounded-2xl shadow-sm border animate-fade-in"><div class="flex flex-col sm:flex-row justify-between items-start"><div><h1 class="text-3xl font-bold text-gray-800 mb-2">${profile.name}</h1><p class="text-gray-500 mb-6">${profile.tagline}</p></div><button id="edit-company-profile-btn" class="flex items-center space-x-2 border border-gray-300 text-gray-700 font-semibold px-4 py-2 rounded-lg hover:bg-gray-50 mt-4 sm:mt-0"><i data-lucide="edit"></i><span>Edit</span></button></div><h2 class="text-xl font-semibold text-gray-800">About</h2><p class="text-gray-600 mb-4">${profile.about}</p><a href="https://${profile.website}" target="_blank" class="text-indigo-600 hover:underline">${profile.website}</a></div>`;
+        }
+        
+        const JobDetailsModal = (job, analysisResult) => {
+            const hasApplied = state.allApplications.some(app => app.jobId === job.id && app.studentId === state.studentData.id);
+            let content = `<div class="p-4 text-center text-gray-500">AI is analyzing your profile...</div>`;
+            if(analysisResult) {
+                const { matchingSkills, skillsToDevelop, summary } = analysisResult;
+                content = `<p class="text-sm text-gray-600 mb-4">${summary || "Here is an analysis of your profile against the job requirements."}</p><div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4"><div><h4 class="font-semibold text-green-700">Matching Skills</h4><ul class="list-disc list-inside text-sm">${matchingSkills && matchingSkills.length > 0 ? matchingSkills.map(s => `<li>${s}</li>`).join('') : '<li>No direct matches found.</li>'}</ul></div><div><h4 class="font-semibold text-orange-700">Skills to Develop</h4><ul class="list-disc list-inside text-sm">${skillsToDevelop && skillsToDevelop.length > 0 ? skillsToDevelop.map(s => `<li>${s}</li>`).join('') : '<li>Great fit! No essential skills missing.</li>'}</ul></div></div>`;
+             }
+            return `<div id="modal-overlay" class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 sm:p-8 m-4 animate-fade-in max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">${job.title}</h2>
+                            <div class="flex items-center flex-wrap gap-x-4 text-sm text-gray-500 mt-2">
+                                <span class="flex items-center gap-x-1"><i data-lucide="map-pin" class="w-4 h-4"></i> ${job.location}</span>
+                                <span class="flex items-center gap-x-1"><i data-lucide="briefcase" class="w-4 h-4"></i> ${job.stipend}</span>
+                            </div>
+                        </div>
+                        <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600"><i data-lucide="x"></i></button>
+                    </div>
+                    <div id="ai-analysis-content" class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg mb-6">
+                        <h3 class="text-lg font-semibold flex items-center"><i data-lucide="brain-circuit" class="mr-2 text-indigo-600"></i>AI Skill Analysis</h3>
+                        ${content}
+                    </div>
+                    <div class="mt-6 text-center">
+                        <button id="modal-one-click-apply-btn" data-job-id="${job.id}" class="w-full sm:w-1/2 py-2.5 font-semibold rounded-lg ${hasApplied ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}" ${hasApplied ? 'disabled' : ''}>${hasApplied ? 'Applied' : 'One-Click Apply'}</button>
+                    </div>
+                </div>
+            </div>`;
+        };
+
+         const FormModal = (title, formContent, handleSubmit) => {
+            const modalId = 'form-modal-container';
+            const modalHTML = `<div id="${modalId}" class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"><div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 sm:p-8 animate-fade-in max-h-[90vh] overflow-y-auto"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">${title}</h2><button class="close-modal-btn text-gray-400 hover:text-gray-600"><i data-lucide="x"></i></button></div><form id="generic-form" class="space-y-4">${formContent}<div class="flex justify-end space-x-4 pt-4"><button type="button" class="close-modal-btn px-6 py-2 rounded-lg bg-gray-100 hover:bg-gray-200">Cancel</button><button type="submit" class="px-6 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700">Save Changes</button></div></form></div></div>`;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            lucide.createIcons();
+            const closeModal = () => document.getElementById(modalId)?.remove();
+            document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', closeModal));
+            document.getElementById('generic-form').addEventListener('submit', (e) => { e.preventDefault(); handleSubmit(new FormData(e.target)); closeModal(); });
+         };
+         
+         const InfoModal = (title, content) => {
+            const modalId = 'info-modal-container';
+            const modalHTML = `<div id="${modalId}" class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"><div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 sm:p-8 animate-fade-in max-h-[90vh] overflow-y-auto"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">${title}</h2><button class="close-modal-btn text-gray-400 hover:text-gray-600"><i data-lucide="x"></i></button></div><div>${content}</div><div class="flex justify-end pt-4 mt-4 border-t"><button type="button" class="close-modal-btn px-6 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Close</button></div></div></div>`;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            lucide.createIcons();
+            const closeModal = () => document.getElementById(modalId)?.remove();
+            document.querySelectorAll(`#${modalId} .close-modal-btn`).forEach(btn => btn.addEventListener('click', closeModal));
+        };
+
+        const ReviewProfileModal = (studentProfile, application) => {
+            if (!studentProfile || !application) return '';
+            const isTopStudent = topStudentIds.includes(studentProfile.id);
+            const modalId = 'review-profile-modal';
+
+            const modalHTML = `<div id="${modalId}" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+                <div class="bg-gray-50 rounded-2xl shadow-xl w-full max-w-4xl h-[90vh] flex flex-col">
+                    <div class="flex-shrink-0 p-4 sm:p-6 border-b bg-white rounded-t-2xl">
+                        <div class="flex flex-col sm:flex-row justify-between items-start">
+                            <div class="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-6">
+                                <img src="${studentProfile.profilePicUrl}" alt="${studentProfile.name}" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white shadow-lg sm:-mt-12 sm:ml-4"/>
+                                <div class="pt-2">
+                                    <div class="flex items-center gap-x-3 flex-wrap">
+                                        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">${studentProfile.name}</h1>
+                                        ${isTopStudent ? `<span class="shining-badge flex items-center gap-x-1.5 text-xs sm:text-sm font-semibold px-3 py-1 rounded-full"><i data-lucide="star" class="w-4 h-4"></i> Recommended</span>` : ''}
+                                    </div>
+                                    <p class="text-gray-600 mt-1">${studentProfile.headline}</p>
+                                    <p class="text-sm font-semibold text-gray-500 mt-2">Applied for: <span class="text-indigo-600">${application.role}</span></p>
+                                    <p class="text-sm font-semibold text-gray-500">CGPA: ${studentProfile.cgpa}</p>
+                                    <div class="mt-4">
+                                        <a href="${studentProfile.resumeUrl}" target="_blank" class="inline-flex items-center gap-x-2 border-2 border-indigo-500 text-indigo-600 font-semibold px-5 py-2 rounded-lg hover:bg-indigo-50 smooth-transition text-sm"><i data-lucide="file-text" class="w-4 h-4"></i> View Resume</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full sm:w-auto flex items-center space-x-3 mt-4 sm:mt-0">
+                                 <button data-app-id="${application.id}" data-action="approve" class="modal-approval-btn flex-1 sm:flex-none flex items-center justify-center gap-x-2 bg-green-600 text-white font-semibold px-4 sm:px-6 py-2.5 rounded-lg hover:bg-green-700 smooth-transition"><i data-lucide="check" class="w-5 h-5"></i><span class="hidden sm:inline">Approve</span></button>
+                                 <button data-app-id="${application.id}" data-action="reject" class="modal-approval-btn flex-1 sm:flex-none flex items-center justify-center gap-x-2 bg-red-600 text-white font-semibold px-4 sm:px-6 py-2.5 rounded-lg hover:bg-red-700 smooth-transition"><i data-lucide="x" class="w-5 h-5"></i><span class="hidden sm:inline">Reject</span></button>
+                                 <button class="close-modal-btn text-gray-400 hover:text-gray-600 p-2"><i data-lucide="x-circle"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-1 p-4 sm:p-6 overflow-y-auto">
+                        <div class="space-y-6">
+                            <div><h3 class="text-lg font-semibold border-b pb-1 mb-2">About</h3><p class="text-gray-700 whitespace-pre-wrap">${studentProfile.about}</p></div>
+                            <div><h3 class="text-lg font-semibold border-b pb-1 mb-2">Skills</h3><div class="flex flex-wrap gap-2 mt-2">${studentProfile.skills.map(skill => `<span class="bg-gray-200 text-gray-800 text-sm font-medium px-3 py-1 rounded-full">${skill}</span>`).join('')}</div></div>
+                            <div><h3 class="text-lg font-semibold border-b pb-1 mb-2">Experience</h3><ul class="space-y-2">${studentProfile.experience.map(e => `<li><p class="font-semibold">${e.role} at ${e.company}</p><p class="text-sm text-gray-500">${e.description}</p></li>`).join('')}</ul></div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            lucide.createIcons();
+            const closeModal = () => document.getElementById(modalId)?.remove();
+            document.querySelector(`#${modalId} .close-modal-btn`).addEventListener('click', closeModal);
+            document.getElementById(modalId).addEventListener('click', (e) => { if(e.target.id === modalId) closeModal(); });
+        };
+
+        const JobVerificationView = () => {
+            const pendingJobs = state.allJobs.filter(j => j.status === 'Pending Verification');
+            return `<div class="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in"><h2 class="text-xl font-semibold text-gray-800 mb-4">Pending Job Verifications</h2><div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="text-sm text-gray-500 border-b"><th class="py-3 px-4 font-medium">Company</th><th class="py-3 px-4 font-medium">Job Title</th><th class="py-3 px-4 font-medium">Stipend</th><th class="py-3 px-4 font-medium text-center">Action</th></tr></thead><tbody>${pendingJobs.length > 0 ? pendingJobs.map(job => `<tr class="border-b last:border-0 hover:bg-gray-50"><td class="py-4 px-4 font-semibold">${job.company}</td><td class="py-4 px-4">${job.title}</td><td class="py-4 px-4">${job.stipend}</td><td class="py-4 px-4 text-center space-x-2"><button data-job-id="${job.id}" data-action="approve" class="job-verify-btn px-3 py-1 text-sm font-semibold text-green-700 bg-green-100 rounded-md hover:bg-green-200">Approve</button><button data-job-id="${job.id}" data-action="reject" class="job-verify-btn px-3 py-1 text-sm font-semibold text-red-700 bg-red-100 rounded-md hover:bg-red-200">Reject</button></td></tr>`).join('') : `<tr><td colspan="4" class="text-center py-8 text-gray-500">No jobs are pending verification.</td></tr>`}</tbody></table></div></div>`;
+        };
+
+        const VideoCallView = (interview) => `<div class="fixed inset-0 bg-gray-900 z-[100] flex flex-col p-4 animate-fade-in"><div class="relative grid grid-cols-1 md:grid-cols-2 gap-4 flex-1"><div class="bg-black rounded-lg overflow-hidden relative"><video class="w-full h-full video-feed" autoplay muted loop playsinline src="https://placehold.co/1920x1080.mp4?text=Recruiter"></video><div class="absolute bottom-4 left-4 bg-black/50 text-white text-sm px-2 py-1 rounded">Rajesh Kumar (Innovate Inc.)</div></div><div class="bg-black rounded-lg overflow-hidden relative"><video class="w-full h-full video-feed" autoplay muted loop playsinline src="https://placehold.co/1920x1080.mp4?text=You"></video><div class="absolute bottom-4 left-4 bg-black/50 text-white text-sm px-2 py-1 rounded">Rohan Mehra (You)</div></div></div><div class="flex-shrink-0 flex items-center justify-center p-4"><div class="flex items-center justify-center space-x-4 p-4 rounded-full call-controls"><button class="w-14 h-14 rounded-full text-white flex items-center justify-center hover:bg-white/30"><i data-lucide="mic"></i></button><button class="w-14 h-14 rounded-full text-white flex items-center justify-center hover:bg-white/30"><i data-lucide="video"></i></button><button id="hang-up-btn" class="w-16 h-16 rounded-full text-white flex items-center justify-center hang-up"><i data-lucide="phone-off"></i></button><button class="w-14 h-14 rounded-full text-white flex items-center justify-center hover:bg-white/30"><i data-lucide="cast"></i></button><button class="w-14 h-14 rounded-full text-white flex items-center justify-center hover:bg-white/30"><i data-lucide="more-vertical"></i></button></div></div></div>`;
+
+        const CollegeAdminDashboard = () => {
+             const totalPlaced = state.allStudents.filter(s => s.status === 'Placed').length;
+             const unplacedCount = state.allStudents.filter(s => s.status === 'Not Placed').length;
+             const totalCompanies = mockData.college_admin.companies.length;
+             
+             const now = new Date();
+             const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+             startOfWeek.setHours(0, 0, 0, 0);
+             const endOfWeek = new Date(startOfWeek);
+             endOfWeek.setDate(endOfWeek.getDate() + 6);
+             endOfWeek.setHours(23, 59, 59, 999);
+             
+             // Count interviews from all recruiters
+             const interviewsThisWeekCount = Object.values(state.allApplications)
+                .flatMap(app => state.recruiterData.interviews.filter(i => i.studentId === app.studentId && i.role === app.role))
+                .filter(i => {
+                    const interviewDate = new Date(i.date);
+                    return interviewDate >= startOfWeek && interviewDate <= endOfWeek;
+                }).length;
+
+
+             const placedStudents = state.allStudents.filter(s => s.status === 'Placed' && s.package);
+             const placementsByBranch = placedStudents.reduce((acc, student) => {
+                 acc[student.branch] = (acc[student.branch] || 0) + 1;
+                 return acc;
+            }, {});
+            const branchData = Object.entries(placementsByBranch).map(([name, value]) => ({ name, value }));
+            const maxBranchPlacements = Math.max(...branchData.map(d => d.value), 0);
+
+            return `<div class="space-y-8 animate-fade-in">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border smooth-transition card-hover"><p class="text-3xl font-bold text-gray-800">${state.allStudents.length}</p><p class="text-sm font-medium text-gray-500">Total Students</p></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border smooth-transition card-hover"><p class="text-3xl font-bold text-green-600">${totalPlaced}</p><p class="text-sm font-medium text-gray-500">Students Placed</p></div>
+                     <div class="bg-white p-6 rounded-2xl shadow-sm border smooth-transition card-hover"><p class="text-3xl font-bold text-red-600">${unplacedCount}</p><p class="text-sm font-medium text-gray-500">Students Unplaced</p></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border smooth-transition card-hover"><p class="text-3xl font-bold text-blue-600">${interviewsThisWeekCount}</p><p class="text-sm font-medium text-gray-500">Interviews this Week</p></div>
+                </div>
+                 <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Placements by Branch</h3>
+                    <div class="space-y-4">
+                        ${branchData.length > 0 ? branchData.map(item => `
+                        <div class="w-full">
+                            <div class="flex justify-between mb-1"><span class="text-base font-medium text-indigo-700">${item.name}</span><span class="text-sm font-medium text-indigo-700">${item.value}</span></div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-indigo-600 h-2.5 rounded-full smooth-transition" style="width: ${maxBranchPlacements > 0 ? (item.value / maxBranchPlacements) * 100 : 0}%"></div></div>
+                        </div>`).join('') : '<p class="text-gray-500 text-center py-4">No placement data available for branches.</p>'}
+                    </div>
+                </div>
+            </div>`;
+        };
+
+        const ManageStudents = () => `<div class="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in"><div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="text-sm text-gray-500 border-b"><th class="py-3 px-4 font-medium">Name</th><th class="py-3 px-4 font-medium">Email</th><th class="py-3 px-4 font-medium">Branch</th><th class="py-3 px-4 font-medium text-center">Status</th></tr></thead><tbody>${state.allStudents.map(s => `<tr class="border-b last:border-0 hover:bg-gray-50"><td class="py-4 px-4 font-semibold">${s.name}</td><td class="py-4 px-4">${s.email}</td><td class="py-4 px-4">${s.branch}</td><td class="py-4 px-4 text-center">${getStatusChip(s.status)}</td></tr>`).join('')}</tbody></table></div></div>`;
+
+        const ManageCompanies = () => `<div class="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in"><div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="text-sm text-gray-500 border-b"><th class="py-3 px-4 font-medium">Name</th><th class="py-3 px-4 font-medium">Industry</th><th class="py-3 px-4 font-medium text-center">Jobs Posted</th></tr></thead><tbody>${mockData.college_admin.companies.map(c => `<tr class="border-b last:border-0 hover:bg-gray-50"><td class="py-4 px-4 font-semibold">${c.name}</td><td class="py-4 px-4">${c.industry}</td><td class="py-4 px-4 text-center">${c.jobsPosted}</td></tr>`).join('')}</tbody></table></div></div>`;
+        
+        const ReportsView = () => `<div class="space-y-8 animate-fade-in">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                <h2 class="text-xl font-semibold text-gray-800">Generate Reports</h2>
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="border p-4 rounded-lg smooth-transition card-hover">
+                        <h3 class="font-semibold text-lg text-gray-800">Student List</h3>
+                        <p class="text-sm text-gray-500 mt-1 mb-4">Download a CSV of all registered students with their details.</p>
+                        <button id="download-students-csv" class="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-800 font-semibold py-2 rounded-lg hover:bg-gray-200 smooth-transition"><i data-lucide="download"></i><span>Download CSV</span></button>
+                    </div>
+                    <div class="border p-4 rounded-lg smooth-transition card-hover">
+                        <h3 class="font-semibold text-lg text-gray-800">Placement Report</h3>
+                        <p class="text-sm text-gray-500 mt-1 mb-4">Download a CSV of all students who have been placed.</p>
+                        <button id="download-placements-csv" class="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-800 font-semibold py-2 rounded-lg hover:bg-gray-200 smooth-transition"><i data-lucide="download"></i><span>Download CSV</span></button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+        
+        // --- ROUTER & MAIN RENDER FUNCTION ---
+        function render() {
+            const appContainer = document.getElementById('app-container');
+            if(state.viewingSupervisorForm) {
+                appContainer.innerHTML = SupervisorFeedbackForm(state.currentAppForFeedback);
+                addSupervisorFormListeners();
+                lucide.createIcons();
+                return;
+            }
+
+            if (!state.isAuthenticated) { appContainer.innerHTML = LoginPage(); addLoginListeners(); lucide.createIcons(); return; }
+            let viewContent = '';
+            switch(state.currentRole) {
+                case 'student': viewContent = state.activeView === 'Dashboard' ? StudentDashboard() : state.activeView === 'Applications' ? StudentApplications() : state.activeView === 'Aptitude Tests' ? AptitudeTests() : state.activeView === 'My Profile' ? StudentProfile() : state.activeView === 'Find Jobs' ? FindJobs() : StudentDashboard(); break;
+                case 'faculty_mentor': viewContent = FacultyDashboard(); break;
+                case 'recruiter': viewContent = state.activeView === 'Dashboard' ? RecruiterDashboard() : state.activeView === 'Manage Jobs' ? ManageJobs() : state.activeView === 'Applicants' ? ApplicantsView() : state.activeView === 'Interviews' ? InterviewsView() : state.activeView === 'Company Profile' ? CompanyProfile() : RecruiterDashboard(); break;
+                case 'college_admin': viewContent = state.activeView === 'Dashboard' ? CollegeAdminDashboard() : state.activeView === 'Students' ? ManageStudents() : state.activeView === 'Companies' ? ManageCompanies() : state.activeView === 'Reports' ? ReportsView() : state.activeView === 'Job Verification' ? JobVerificationView() : CollegeAdminDashboard(); break;
+            }
+            appContainer.innerHTML = AppShell(viewContent);
+            addAppListeners();
+            lucide.createIcons();
+        }
+
+        // --- EVENT LISTENERS ---
+        function addLoginListeners() {
+            document.getElementById('login-form').addEventListener('submit', (e) => { e.preventDefault(); const role = document.getElementById('login-role-select').value; state.isAuthenticated = true; state.currentRole = role; state.activeView = 'Dashboard'; render(); });
+        }
+        
+        function addAppListeners() {
+            document.getElementById('logout-button')?.addEventListener('click', () => { state.isAuthenticated = false; render(); });
+            document.getElementById('role-switcher')?.addEventListener('change', (e) => { state.currentRole = e.target.value; state.activeView = 'Dashboard'; render(); });
+            document.querySelectorAll('.nav-button').forEach(button => { button.addEventListener('click', () => { state.activeView = button.dataset.view; if(window.innerWidth < 1024) state.isSidebarOpen = false; render(); }); });
+            document.getElementById('menu-button')?.addEventListener('click', () => { state.isSidebarOpen = !state.isSidebarOpen; render(); });
+            document.getElementById('mobile-overlay')?.addEventListener('click', () => { state.isSidebarOpen = false; render(); });
+            
+            // Student Listeners
+            document.getElementById('edit-profile-btn')?.addEventListener('click', () => {
+                const profile = state.studentData.profile;
+                const formContent = `<div class="space-y-4"><div><label class="block text-sm font-medium">Name</label><input type="text" name="name" class="w-full p-2 border rounded-md" value="${profile.name}"></div><div><label class="block text-sm font-medium">Headline</label><input type="text" name="headline" class="w-full p-2 border rounded-md" value="${profile.headline}"></div><div><label class="block text-sm font-medium">About</label><textarea name="about" rows="4" class="w-full p-2 border rounded-md">${profile.about}</textarea></div><div><label class="block text-sm font-medium">Skills (comma-separated)</label><input type="text" name="skills" class="w-full p-2 border rounded-md" value="${profile.skills.join(', ')}"></div><div class="border-t pt-4 space-y-2"><div class="flex items-center space-x-4"><label for="resume-upload-input" class="cursor-pointer w-full text-center px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 font-semibold text-sm">Upload Resume</label><input type="file" id="resume-upload-input" class="hidden" accept=".pdf,.doc,.docx,.txt"><button type="button" id="modal-ai-build-btn" class="w-full px-4 py-2 rounded-lg bg-indigo-200 text-indigo-800 font-semibold text-sm cursor-not-allowed" disabled>Build Profile with AI</button></div><p id="resume-file-name" class="text-xs text-center text-gray-500">No file selected.</p></div></div>`;
+                FormModal("Edit Profile", formContent, (formData) => { state.studentData.profile.name = formData.get('name'); state.studentData.profile.headline = formData.get('headline'); state.studentData.profile.about = formData.get('about'); state.studentData.profile.skills = formData.get('skills').split(',').map(s => s.trim()); render(); });
+                
+                const resumeInput = document.getElementById('resume-upload-input'); 
+                const aiBuildBtn = document.getElementById('modal-ai-build-btn'); 
+                const fileNameDisplay = document.getElementById('resume-file-name');
+
+                resumeInput.addEventListener('change', () => { 
+                    if (resumeInput.files.length > 0) { 
+                        aiBuildBtn.disabled = false; 
+                        aiBuildBtn.classList.replace('bg-indigo-200','bg-indigo-600'); 
+                        aiBuildBtn.classList.replace('text-indigo-800','text-white'); 
+                        aiBuildBtn.classList.remove('cursor-not-allowed'); 
+                        fileNameDisplay.textContent = `File: ${resumeInput.files[0].name}`; 
+                    } 
+                });
+
+                aiBuildBtn.addEventListener('click', () => {
+                    const file = resumeInput.files[0];
+                    if (!file) {
+                        showToast("Please select a resume file first.", "error");
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+
+                    reader.onload = async () => {
+                        const formContainer = document.getElementById('form-modal-container');
+                        const loadingDiv = document.createElement('div');
+                        try {
+                            if (formContainer) formContainer.style.display = 'none';
+                            loadingDiv.innerHTML = `<div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex flex-col items-center justify-center z-[99] text-white text-center p-4 overflow-hidden"><div class="w-full relative h-20"><div class="absolute top-1/2 -translate-y-1/2 rocket-launch-horizontal"><i data-lucide="rocket" class="w-20 h-20 text-indigo-300 transform -rotate-45"></i></div></div><h2 class="text-2xl font-bold mt-8">Analyzing Resume with Gemini...</h2></div>`;
+                            document.body.appendChild(loadingDiv);
+                            lucide.createIcons();
+
+                            const dataUrl = reader.result;
+                            const base64Data = dataUrl.split(',')[1];
+                            const mimeType = file.type;
+
+                            const parsedProfile = await getAiProfileFromResume(base64Data, mimeType);
+
+                            if (parsedProfile) {
+                                const form = document.getElementById('generic-form');
+                                if (form) {
+                                    form.name.value = parsedProfile.name || '';
+                                    form.headline.value = parsedProfile.headline || '';
+                                    form.about.value = parsedProfile.about || '';
+                                    form.skills.value = (parsedProfile.skills || []).join(', ');
+                                }
+                                
+                                state.studentData.profile.name = parsedProfile.name || state.studentData.profile.name;
+                                state.studentData.profile.headline = parsedProfile.headline || state.studentData.profile.headline;
+                                state.studentData.profile.about = parsedProfile.about || state.studentData.profile.about;
+                                state.studentData.profile.skills = parsedProfile.skills || state.studentData.profile.skills;
+                                state.studentData.profile.experience = parsedProfile.experience || state.studentData.profile.experience;
+                                state.studentData.profile.education = parsedProfile.education || state.studentData.profile.education;
+
+                                showToast("Profile auto-populated with Gemini!");
+                            } else {
+                                showToast("Could not parse resume with AI.", "error");
+                            }
+                        } catch (error) {
+                            console.error("Error during AI profile build:", error);
+                            showToast("An error occurred while building the profile.", "error");
+                        } finally {
+                            if (document.body.contains(loadingDiv)) {
+                                document.body.removeChild(loadingDiv);
+                            }
+                            if (formContainer) formContainer.style.display = 'flex';
+                        }
+                    };
+                    
+                    reader.onerror = () => {
+                        showToast("Error reading the resume file.", "error");
+                    };
+                });
+            });
+
+            document.querySelectorAll('.job-details-btn').forEach(btn => { btn.addEventListener('click', async (e) => { const jobId = parseInt(e.currentTarget.dataset.jobId); const job = state.allJobs.find(j => j.id === jobId); if (job) { const modalContainer = document.createElement('div'); modalContainer.id = 'modal-container'; modalContainer.innerHTML = JobDetailsModal(job, null); document.body.appendChild(modalContainer); lucide.createIcons(); const closeModal = () => document.getElementById('modal-container')?.remove(); document.getElementById('close-modal-btn').addEventListener('click', closeModal); document.getElementById('modal-overlay').addEventListener('click', (event) => { if (event.target.id === 'modal-overlay') closeModal(); }); const analysisResult = await getAiSkillAnalysis(state.studentData.profile.skills, job.skills); const analysisContentEl = document.getElementById('ai-analysis-content'); if (analysisContentEl) { const { matchingSkills, skillsToDevelop, summary } = analysisResult || {}; analysisContentEl.innerHTML = `<h3 class="text-lg font-semibold flex items-center"><i data-lucide="brain-circuit" class="mr-2 text-indigo-600"></i>AI Skill Analysis</h3><p class="text-sm text-gray-600 mb-4">${summary || "Analysis complete."}</p><div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4"><div><h4 class="font-semibold text-green-700">Matching Skills</h4><ul class="list-disc list-inside text-sm">${matchingSkills && matchingSkills.length > 0 ? matchingSkills.map(s => `<li>${s}</li>`).join('') : '<li>-</li>'}</ul></div><div><h4 class="font-semibold text-orange-700">Skills to Develop</h4><ul class="list-disc list-inside text-sm">${skillsToDevelop && skillsToDevelop.length > 0 ? skillsToDevelop.map(s => `<li>${s}</li>`).join('') : '<li>-</li>'}</ul></div></div>`; lucide.createIcons(); } document.getElementById('modal-one-click-apply-btn')?.addEventListener('click', (e) => { const newApp = { id: Date.now(), studentId: state.studentData.id, studentName: state.studentData.name, jobId: job.id, company: job.company, role: job.title, status: "Pending Faculty/Mentor Approval", appliedOn: new Date().toISOString().split('T')[0] }; state.allApplications.unshift(newApp); showToast(`Applied to ${job.title}!`); e.target.disabled = true; e.target.textContent = 'Applied'; e.target.classList.replace('bg-indigo-600', 'bg-gray-300'); }); } }); });
+            
+            // Certificate View/Download Listeners
+            const handleDownloadCertificate = (certData) => {
+                if (!certData) {
+                    showToast("Certificate data not found.", "error");
+                    return;
+                }
+                const tempContainer = document.createElement('div');
+                tempContainer.style.position = 'absolute';
+                tempContainer.style.left = '-9999px';
+                tempContainer.style.width = '1024px';
+                tempContainer.innerHTML = CertificateTemplate(certData);
+                document.body.appendChild(tempContainer);
+                lucide.createIcons(); 
+
+                const certElement = tempContainer.querySelector('.certificate');
+                html2canvas(certElement, { scale: 2 })
+                    .then(canvas => {
+                        const link = document.createElement('a');
+                        link.download = `Certificate-${certData.studentName.replace(' ', '_')}.png`;
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                        showToast("Certificate download started.");
+                    })
+                    .catch(err => {
+                        console.error('Error generating certificate image:', err);
+                        showToast("Could not download certificate.", "error");
+                    })
+                    .finally(() => {
+                        document.body.removeChild(tempContainer);
+                    });
+            };
+
+            document.querySelectorAll('.view-certificate-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const expIndex = parseInt(e.currentTarget.dataset.expIndex);
+                    const exp = state.studentData.profile.experience[expIndex];
+                    if (exp && exp.certificateData) {
+                        const modalContainer = document.createElement('div');
+                        modalContainer.id = 'certificate-modal-container';
+                        modalContainer.innerHTML = CertificateModal(exp.certificateData);
+                        document.body.appendChild(modalContainer);
+                        lucide.createIcons();
+
+                        const closeModal = () => document.getElementById('certificate-modal-container')?.remove();
+                        document.getElementById('close-cert-modal').addEventListener('click', closeModal);
+                        document.getElementById('certificate-modal-overlay').addEventListener('click', (event) => {
+                            if (event.target.id === 'certificate-modal-overlay') closeModal();
+                        });
+                        
+                        document.getElementById('download-cert-from-modal').addEventListener('click', () => {
+                            handleDownloadCertificate(exp.certificateData);
+                        });
+                    }
+                });
+            });
+
+            document.querySelectorAll('.download-certificate-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const expIndex = parseInt(e.currentTarget.dataset.expIndex);
+                    const exp = state.studentData.profile.experience[expIndex];
+                    handleDownloadCertificate(exp.certificateData);
+                });
+            });
+
+            document.querySelectorAll('.share-certificate-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const expIndex = parseInt(e.currentTarget.dataset.expIndex);
+                    const exp = state.studentData.profile.experience[expIndex];
+                    if (exp && exp.isInternship) {
+                        const certId = exp.certificateData.certId;
+                        const url = `${window.location.origin}${window.location.pathname}?verify_cert=${certId}`;
+                        
+                        // Use fallback for clipboard copy
+                        const textArea = document.createElement("textarea");
+                        textArea.value = url;
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        try {
+                            document.execCommand('copy');
+                            showToast("Certificate verification link copied!");
+                        } catch (err) {
+                            showToast("Failed to copy link.", "error");
+                        }
+                        document.body.removeChild(textArea);
+                    }
+                });
+            });
+
+
+            // Aptitude Test Listeners
+            document.getElementById('start-test-btn')?.addEventListener('click', () => {
+                state.takingAptitudeTest = true;
+                state.aptitudeTestState = { currentQuestion: 0, answers: {} };
+                render();
+            });
+
+            document.getElementById('next-question-btn')?.addEventListener('click', () => {
+                if (state.aptitudeTestState.currentQuestion < mockData.aptitudeQuestions.length - 1) {
+                    state.aptitudeTestState.currentQuestion++;
+                    render();
+                }
+            });
+
+            document.getElementById('prev-question-btn')?.addEventListener('click', () => {
+                if (state.aptitudeTestState.currentQuestion > 0) {
+                    state.aptitudeTestState.currentQuestion--;
+                    render();
+                }
+            });
+
+            document.querySelectorAll('.aptitude-option-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    state.aptitudeTestState.answers[state.aptitudeTestState.currentQuestion] = e.target.value;
+                });
+            });
+
+            document.getElementById('submit-test-btn')?.addEventListener('click', () => {
+                let score = 0;
+                mockData.aptitudeQuestions.forEach((q, index) => {
+                    if (state.aptitudeTestState.answers[index] === q.answer) {
+                        score++;
+                    }
+                });
+                const finalScore = Math.round((score / mockData.aptitudeQuestions.length) * 100);
+                
+                const student = state.allStudents.find(s => s.id === state.studentData.id);
+                if(student) {
+                    student.aptitudeScore = finalScore;
+                }
+                
+                // Re-sort leaderboard
+                sortedStudents = [...state.allStudents].sort((a, b) => b.aptitudeScore - a.aptitudeScore);
+                topStudentIds = sortedStudents.slice(0, 10).map(s => s.id);
+                
+                state.takingAptitudeTest = false;
+                state.aptitudeTestState = null;
+
+                showToast(`Test submitted! Your score: ${finalScore}%`);
+                render();
+            });
+
+
+            document.querySelectorAll('.faculty-tab-btn').forEach(btn => { btn.addEventListener('click', (e) => { state.facultyTab = e.target.dataset.tab; render(); }); });
+
+            // Application Review Logic (Mentor & Recruiter)
+            document.querySelectorAll('.review-application-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const appId = parseInt(e.currentTarget.dataset.appId);
+                    const studentId = parseInt(e.currentTarget.dataset.studentId);
+                    const studentProfile = getStudentProfile(studentId);
+                    const application = state.allApplications.find(a => a.id === appId);
+
+                    if (studentProfile && application) {
+                        ReviewProfileModal(studentProfile, application);
+
+                        // Add listeners to the new modal's buttons
+                        document.querySelectorAll('.modal-approval-btn').forEach(modalBtn => {
+                            modalBtn.addEventListener('click', (evt) => {
+                                const action = evt.currentTarget.dataset.action;
+                                const currentAppId = parseInt(evt.currentTarget.dataset.appId);
+                                const currentApp = state.allApplications.find(a => a.id === currentAppId);
+                                const modalElement = document.getElementById('review-profile-modal');
+
+                                if (!currentApp) return;
+
+                                if (action === 'approve') {
+                                    if (state.currentRole === 'faculty_mentor') {
+                                        currentApp.status = 'Pending Recruiter Review';
+                                        state.facultyMentorData.approvalHistory.unshift({id: currentApp.id, studentName: currentApp.studentName, company: currentApp.company, role: currentApp.role, status: 'Approved'});
+                                        showToast(`Application approved for ${currentApp.studentName}.`);
+                                    } else if (state.currentRole === 'recruiter') {
+                                        currentApp.status = 'Shortlisted';
+                                        showToast(`${currentApp.studentName} has been shortlisted!`);
+                                        setTimeout(() => {
+                                            const formContent = `<div><p>Scheduling for <strong>${currentApp.studentName}</strong> for the role of <strong>${currentApp.role}</strong>.</p></div><div><label class="block text-sm font-medium">Date & Time</label><input type="datetime-local" name="date" class="w-full p-2 border rounded-md" required></div>`;
+                                            FormModal("Schedule Interview", formContent, (formData) => {
+                                                const newInterview = { id: Date.now(), studentId: currentApp.studentId, studentName: currentApp.studentName, role: currentApp.role, date: formData.get('date'), type: 'Technical', status: 'Scheduled' };
+                                                state.recruiterData.interviews.unshift(newInterview);
+                                                showToast(`Interview scheduled for ${currentApp.studentName}.`);
+                                                render();
+                                            });
+                                        }, 100);
+                                    }
+                                    modalElement?.remove();
+                                    render();
+                                } else { // Reject action
+                                    const handleRejection = (formData) => {
+                                        const reason = formData.get('reason');
+                                        currentApp.rejectionReason = reason;
+                                        if (state.currentRole === 'faculty_mentor') {
+                                            currentApp.status = 'Rejected by Mentor';
+                                            state.facultyMentorData.approvalHistory.unshift({ id: currentApp.id, studentName: currentApp.studentName, company: currentApp.company, role: currentApp.role, status: 'Rejected' });
+                                        } else {
+                                            currentApp.status = 'Rejected by Recruiter';
+                                        }
+                                        showToast(`Application for ${currentApp.studentName} has been rejected.`);
+                                        render();
+                                    };
+                                    
+                                    const formContent = `<div><p class="mb-2">Provide a reason for rejecting <strong>${currentApp.studentName}</strong>'s application for the <strong>${currentApp.role}</strong> role.</p><label class="block text-sm font-medium">Reason for Rejection</label><textarea name="reason" rows="3" class="w-full p-2 border rounded-md" required></textarea></div>`;
+                                    modalElement?.remove();
+                                    setTimeout(() => FormModal("Reject Application", formContent, handleRejection), 100);
+                                }
+                            });
+                        });
+                    }
+                });
+            });
+
+            // Recruiter-specific Listeners
+            document.getElementById('edit-company-profile-btn')?.addEventListener('click', () => { const profile = state.recruiterData.companyProfile; const formContent = `<div><label>Company Name</label><input type="text" name="name" class="w-full p-2 border rounded-md" value="${profile.name}"></div><div><label>Tagline</label><input type="text" name="tagline" class="w-full p-2 border rounded-md" value="${profile.tagline}"></div><div><label>About</label><textarea name="about" rows="4" class="w-full p-2 border rounded-md">${profile.about}</textarea></div><div><label>Website</label><input type="text" name="website" class="w-full p-2 border rounded-md" value="${profile.website}"></div>`; FormModal("Edit Company Profile", formContent, (formData) => { state.recruiterData.companyProfile.name = formData.get('name'); state.recruiterData.companyProfile.tagline = formData.get('tagline'); state.recruiterData.companyProfile.about = formData.get('about'); state.recruiterData.companyProfile.website = formData.get('website'); showToast("Company profile updated."); render(); }); });
+            document.getElementById('post-job-btn')?.addEventListener('click', () => {
+                const formContent = `<div><label>Job Title</label><input type="text" name="title" class="w-full p-2 border rounded-md" required></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label>Location</label><input type="text" name="location" class="w-full p-2 border rounded-md" required></div><div><label>Stipend/Salary</label><input type="text" name="stipend" class="w-full p-2 border rounded-md" required></div></div><div><label>Job Description</label><textarea name="description" rows="3" class="w-full p-2 border rounded-md"></textarea></div><div><label>Required Skills (comma-separated)</label><input type="text" name="skills" class="w-full p-2 border rounded-md"></div>`;
+                FormModal("Post a New Job", formContent, (formData) => {
+                    const newJob = { id: Date.now(), company: state.recruiterData.company, title: formData.get('title'), applicants: 0, status: 'Pending Verification', location: formData.get('location'), stipend: formData.get('stipend'), skills: formData.get('skills').split(',').map(s => s.trim()) };
+                    state.allJobs.unshift(newJob);
+                    state.recruiterData.jobs = state.allJobs.filter(j => j.company === state.recruiterData.company);
+                    showToast("Job posted for verification.");
+                    render();
+                });
+            });
+
+            document.querySelectorAll('.update-interview-status-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    const interviewId = parseInt(e.currentTarget.dataset.interviewId);
+                    const interview = state.recruiterData.interviews.find(i => i.id === interviewId);
+                    const app = state.allApplications.find(a => a.studentId === interview.studentId && a.role === interview.role);
+                    
+                    const formContent = `
+                        <p>Update the status for <strong>${interview.studentName}</strong>'s interview for the <strong>${interview.role}</strong> role.</p>
+                        <div class="flex gap-4 mt-4">
+                            <button type="button" id="offer-internship-btn" class="flex-1 bg-green-600 text-white font-semibold py-2 rounded-lg hover:bg-green-700 smooth-transition">Offer Internship</button>
+                            <button type="button" id="reject-after-interview-btn" class="flex-1 bg-red-600 text-white font-semibold py-2 rounded-lg hover:bg-red-700 smooth-transition">Reject</button>
+                        </div>
+                    `;
+
+                    // We use a custom modal logic here instead of FormModal for the two buttons
+                    const modalId = 'update-interview-modal';
+                    const modalHTML = `<div id="${modalId}" class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"><div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 sm:p-8 animate-fade-in"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Post-Interview Action</h2><button class="close-modal-btn text-gray-400 hover:text-gray-600"><i data-lucide="x"></i></button></div><div>${formContent}</div></div></div>`;
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                    lucide.createIcons();
+                    const closeModal = () => document.getElementById(modalId)?.remove();
+                    document.querySelector(`#${modalId} .close-modal-btn`).addEventListener('click', closeModal);
+                    
+                    document.getElementById('offer-internship-btn').addEventListener('click', () => {
+                        if(app) app.status = 'Internship In Progress';
+                        const student = state.allStudents.find(s => s.id === interview.studentId);
+                        if(student) student.status = 'Placed';
+                        showToast(`Internship offered to ${interview.studentName}!`);
+                        closeModal();
+                        render();
+                    });
+
+                    document.getElementById('reject-after-interview-btn').addEventListener('click', () => {
+                         if(app) {
+                            const handleRejection = (formData) => {
+                                app.status = 'Rejected by Recruiter';
+                                app.rejectionReason = formData.get('reason');
+                                showToast(`${app.studentName} rejected after interview.`);
+                                render();
+                            }
+                             const reasonForm = `<div><p class="mb-2">Provide a reason for rejecting <strong>${app.studentName}</strong>.</p><label class="block text-sm font-medium">Reason</label><textarea name="reason" rows="3" class="w-full p-2 border rounded-md" required></textarea></div>`;
+                             closeModal();
+                             setTimeout(() => FormModal("Rejection Reason", reasonForm, handleRejection), 100);
+                         } else {
+                            closeModal();
+                            render();
+                         }
+                    });
+
+                });
+            });
+
+            document.querySelectorAll('.request-feedback-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const appId = parseInt(e.currentTarget.dataset.appId);
+                    const app = state.allApplications.find(a => a.id === appId);
+                    const formContent = `
+                        <p>Enter the direct supervisor's details to request feedback for <strong>${app.studentName}</strong>'s internship.</p>
+                        <div><label class="block text-sm font-medium">Supervisor Name</label><input type="text" name="supervisorName" class="w-full p-2 border rounded-md" required></div>
+                        <div><label class="block text-sm font-medium">Supervisor Email</label><input type="email" name="supervisorEmail" class="w-full p-2 border rounded-md" required></div>
+                    `;
+                    FormModal("Request Supervisor Feedback", formContent, (formData) => {
+                        const supervisorEmail = formData.get('supervisorEmail');
+                        showToast(`Feedback request sent to ${supervisorEmail}.`);
+                        state.viewingSupervisorForm = true;
+                        state.currentAppForFeedback = app;
+                        render();
+                    });
+                });
+            });
+
+             document.querySelectorAll('.view-feedback-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const appId = parseInt(e.currentTarget.dataset.appId);
+                    const app = state.allApplications.find(a => a.id === appId);
+                    if (app && app.supervisorFeedback) {
+                        const ratingStars = '&#9733;'.repeat(app.supervisorFeedback.rating) + '&#9734;'.repeat(5 - app.supervisorFeedback.rating);
+                        const content = `
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="font-semibold">Student:</p>
+                                    <p>${app.studentName}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">Rating:</p>
+                                    <p class="text-2xl text-yellow-400">${ratingStars}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">Comments:</p>
+                                    <p class="bg-gray-100 p-3 rounded-md">${app.supervisorFeedback.comments}</p>
+                                </div>
+                                 <div>
+                                    <p class="font-semibold">Completion Confirmed:</p>
+                                    <p>${app.supervisorFeedback.isCompleted ? 'Yes' : 'No'}</p>
+                                </div>
+                            </div>
+                        `;
+                        InfoModal("Supervisor Feedback", content);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.add-to-calendar-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const interviewId = parseInt(e.currentTarget.dataset.interviewId);
+                    const interview = state.recruiterData.interviews.find(i => i.id === interviewId);
+                    if (interview) {
+                        downloadICSFile(interview);
+                    }
+                });
+            });
+
+
+            // College Admin Listeners
+            document.querySelectorAll('.job-verify-btn').forEach(btn => { btn.addEventListener('click', (e) => { const jobId = parseInt(e.currentTarget.dataset.jobId); const action = e.currentTarget.dataset.action; const job = state.allJobs.find(j => j.id === jobId); if (job) { job.status = action === 'approve' ? 'Open' : 'Rejected'; showToast(`Job for ${job.company} has been ${job.status}.`); render(); } }); });
+            document.querySelectorAll('.join-call-btn').forEach(btn => { btn.addEventListener('click', (e) => { const interviewId = parseInt(e.currentTarget.dataset.interviewId); const interview = state.recruiterData.interviews.find(i => i.id === interviewId); if(interview) { const modalContainer = document.createElement('div'); modalContainer.id = 'video-call-container'; modalContainer.innerHTML = VideoCallView(interview); document.body.appendChild(modalContainer); lucide.createIcons(); document.getElementById('hang-up-btn').addEventListener('click', () => { document.getElementById('video-call-container')?.remove(); showToast('Interview call ended.'); }); } }); });
+            document.getElementById('download-students-csv')?.addEventListener('click', () => {
+                const studentData = state.allStudents.map(s => ({id: s.id, name: s.name, email: s.email, branch: s.branch, status: s.status, cgpa: s.cgpa, package_lpa: s.package || 'N/A'}));
+                downloadCSV(studentData, 'student_list');
+            });
+            document.getElementById('download-placements-csv')?.addEventListener('click', () => {
+                const placementData = state.allStudents.filter(s => s.status === 'Placed').map(s => ({name: s.name, branch: s.branch, package_lpa: s.package}));
+                downloadCSV(placementData, 'placement_report');
+            });
+        }
+        
+        // --- Supervisor Form Specific ---
+        const SupervisorFeedbackForm = (app) => {
+            if(!app) return 'Error: No application data found.';
+            const studentProfile = getStudentProfile(app.studentId);
+            return `<div class="bg-gray-100 min-h-screen flex items-center justify-center p-4 animate-fade-in">
+                <div class="w-full max-w-3xl bg-white p-8 rounded-2xl shadow-lg border">
+                    <div class="text-center mb-8">
+                        <h1 class="text-3xl font-bold text-indigo-600">${app.company}</h1>
+                        <p class="mt-2 text-gray-500">Internship Performance Feedback</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg border mb-6 flex items-center space-x-4">
+                        <img src="${studentProfile.profilePicUrl}" class="w-16 h-16 rounded-full"/>
+                        <div>
+                            <p class="font-bold text-lg">${app.studentName}</p>
+                            <p class="text-sm text-gray-600">Role: ${app.role}</p>
+                        </div>
+                    </div>
+                    <form id="supervisor-feedback-form" class="space-y-6">
+                         <input type="hidden" name="appId" value="${app.id}">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Overall Performance Rating</label>
+                            <div class="flex justify-between">
+                                ${[1,2,3,4,5].map(num => `
+                                <label class="flex flex-col items-center space-y-1 cursor-pointer">
+                                    <input type="radio" name="rating" value="${num}" class="peer hidden">
+                                    <span class="text-3xl text-gray-300 peer-checked:text-yellow-400 smooth-transition">${'&#9733;'}</span>
+                                    <span class="text-xs">${num}</span>
+                                </label>`).join('')}
+                            </div>
+                        </div>
+                         <div>
+                            <label class="block text-sm font-medium text-gray-700">Feedback / Comments</label>
+                            <textarea name="comments" rows="4" class="w-full p-2 mt-1 border rounded-md" required placeholder="Provide detailed feedback on the intern's performance, skills, and areas for improvement..."></textarea>
+                        </div>
+                        <div class="flex items-center">
+                             <input id="completion-checkbox" type="checkbox" name="completed" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                             <label for="completion-checkbox" class="ml-2 block text-sm text-gray-900">I confirm the intern has successfully completed their term.</label>
+                        </div>
+                        <div>
+                            <button type="submit" class="w-full py-3 font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 smooth-transition">Submit Feedback</button>
+                        </div>
+                    </form>
+                </div>
+            </div>`;
+        };
+
+        function addSupervisorFormListeners() {
+            document.getElementById('supervisor-feedback-form')?.addEventListener('submit', e => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const appId = parseInt(formData.get('appId'));
+                const app = state.allApplications.find(a => a.id === appId);
+
+                if (app) {
+                    app.status = 'Internship Completed';
+                    const feedback = {
+                        rating: formData.get('rating') || 0,
+                        comments: formData.get('comments'),
+                        isCompleted: formData.get('completed') === 'on'
+                    };
+                    app.supervisorFeedback = feedback;
+                    
+                    const studentProfile = getStudentProfile(app.studentId);
+                    if (studentProfile) {
+                        const newExperience = {
+                            role: app.role,
+                            company: app.company,
+                            period: `Internship Completed on ${new Date().toLocaleDateString()}`,
+                            description: `Supervisor Rating: ${feedback.rating}/5. Successfully completed the internship.`,
+                            isInternship: true,
+                            certificateData: {
+                                certId: `CERT-${app.id}-${Date.now()}`,
+                                studentName: app.studentName,
+                                company: app.company,
+                                role: app.role,
+                                completionDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                                rating: feedback.rating,
+                            }
+                        };
+                        studentProfile.experience.unshift(newExperience);
+                    }
+                }
+                
+                state.viewingSupervisorForm = false;
+                state.currentAppForFeedback = null;
+                showToast("Thank you! Feedback has been submitted.");
+                render();
+            });
+        }
+        
+        // --- NEW FUNCTIONS FOR CALENDAR & CERTIFICATE VERIFICATION ---
+        
+        function downloadICSFile(interview) {
+            const formatDate = (date) => {
+                return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            }
+            const startDate = new Date(interview.date);
+            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hour duration
+
+            const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//CampusPlacementPortal//EN
+BEGIN:VEVENT
+UID:${interview.id}@campus.portal
+DTSTAMP:${formatDate(new Date())}
+DTSTART:${formatDate(startDate)}
+DTEND:${formatDate(endDate)}
+SUMMARY:Interview: ${interview.studentName} for ${interview.role}
+DESCRIPTION:Technical interview for the ${interview.role} role with ${interview.studentName}.
+END:VEVENT
+END:VCALENDAR`;
+
+            const blob = new Blob([icsContent], {type: 'text/calendar'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Interview-${interview.studentName}.ics`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("Calendar event file created.");
+        }
+
+        const CertificateVerificationPage = (certData) => {
+            const ratingStars = '&#9733;'.repeat(certData.rating) + '&#9734;'.repeat(5 - certData.rating);
+            return `<div class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+                <div class="w-full max-w-4xl animate-fade-in">
+                    <div class="certificate relative">
+                        <div class="absolute top-4 right-4 flex items-center gap-x-2 text-green-600 font-semibold">
+                            <i data-lucide="check-circle"></i> Verified
+                        </div>
+                        <div class="certificate-header">Certificate of Completion</div>
+                        <div class="certificate-body">
+                            This is to certify that
+                            <div class="certificate-name">${certData.studentName}</div>
+                            has successfully completed the internship for the role of
+                            <strong class="text-indigo-700">${certData.role}</strong> at <strong class="text-indigo-700">${certData.company}</strong>.
+                            <br/><br/>
+                            Completion Date: ${certData.completionDate}
+                            <br/>
+                            Supervisor Rating: <span class="text-yellow-400 text-2xl">${ratingStars}</span>
+                        </div>
+                         <p class="text-xs text-center text-gray-400 mt-8">Certificate ID: ${certData.certId}</p>
+                    </div>
+                </div>
+            </div>`;
+        }
+        
+        const InvalidCertificatePage = () => {
+             return `<div class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+                <div class="text-center">
+                    <i data-lucide="x-circle" class="w-24 h-24 text-red-500 mx-auto"></i>
+                    <h1 class="text-3xl font-bold mt-4">Certificate Not Found</h1>
+                    <p class="text-gray-600 mt-2">The verification link is invalid or the certificate has been removed.</p>
+                </div>
+            </div>`;
+        }
+
+        // --- SCRIPT INITIALIZATION ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const certToVerify = urlParams.get('verify_cert');
+
+        if (certToVerify) {
+            let foundCert = null;
+            // Search through all students and experiences to find the cert
+            for (const student of [state.studentData.profile, ...state.allStudents.map(s => getStudentProfile(s.id))]) {
+                 if (student && student.experience) {
+                    for (const exp of student.experience) {
+                        if (exp.isInternship && exp.certificateData && exp.certificateData.certId === certToVerify) {
+                            foundCert = exp.certificateData;
+                            break;
+                        }
+                    }
+                 }
+                 if(foundCert) break;
+            }
+
+            const appContainer = document.getElementById('app-container');
+            if (foundCert) {
+                appContainer.innerHTML = CertificateVerificationPage(foundCert);
+            } else {
+                appContainer.innerHTML = InvalidCertificatePage();
+            }
+            lucide.createIcons();
+        } else {
+            render();
+        }
+
+    </script>
+</body>
+</html>
+
+
+
